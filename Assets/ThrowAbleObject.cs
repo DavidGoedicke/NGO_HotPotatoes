@@ -1,7 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
+using Unity.VisualScripting;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class ThrowAbleObject : NetworkBehaviour
 {
@@ -15,9 +18,11 @@ public class ThrowAbleObject : NetworkBehaviour
 
     private Quaternion rot;
 
-
     NetworkObject myNetObj;
 
+   // public delegate void  OnDespawn_Delegate;
+   //    public OnDespawn_Delegate DespawnDelegate;
+    
     // Start is called before the first frame update
     void Start()
     {
@@ -42,6 +47,7 @@ public class ThrowAbleObject : NetworkBehaviour
         }
     }
 
+   
     IEnumerator DestroyAfter(float time)
     {
         yield return new WaitForSeconds(time);
@@ -88,3 +94,4 @@ public class ThrowAbleObject : NetworkBehaviour
         }
     }
 }
+

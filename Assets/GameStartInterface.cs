@@ -43,7 +43,7 @@ public class GameStartInterface : MonoBehaviour
     void StartAsClient_()
     {
        
-        Debug.Log("Trying to connect to:"+IP_Address.text);
+       
 
         String tartger = "";
         if (IP_Address.text.Length == 0)
@@ -54,6 +54,7 @@ public class GameStartInterface : MonoBehaviour
         {
             tartger = IP_Address.text;
         }
+         Debug.Log("Trying to connect to:"+tartger);
         NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(tartger,7777);
         
         NetworkManager.Singleton.StartClient();
