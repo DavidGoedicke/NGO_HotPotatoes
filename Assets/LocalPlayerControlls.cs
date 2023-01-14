@@ -11,7 +11,7 @@ public class LocalPlayerControlls : NetworkBehaviour
     // Start is called before the first frame update
     private Vector3 startPos;
 
-    private PotatoMotion lastClikedObject;
+    private ThrowAbleObject lastClikedObject;
 
     enum clickReturn
     {
@@ -42,7 +42,7 @@ public class LocalPlayerControlls : NetworkBehaviour
         if (IsServer)
         {
            
-            FindObjectOfType<CinemachineTargetGroup>().AddMember(transform,1,5);
+           // FindObjectOfType<CinemachineTargetGroup>().AddMember(transform,1,5);
         }
     }
 
@@ -91,7 +91,7 @@ public class LocalPlayerControlls : NetworkBehaviour
 
             if (lastClickedItem == clickReturn.POTATO)
             {
-                lastClikedObject = netObj.GetComponent<PotatoMotion>();
+                lastClikedObject = netObj.GetComponent<ThrowAbleObject>();
 
 
                 if (lastClikedObject.IsOwnedByServer)
@@ -116,7 +116,7 @@ public class LocalPlayerControlls : NetworkBehaviour
                 lastClikedObject = null;
                 lastClickedItem = clickReturn.NONE;
             }
-            else if (tmp != clickReturn.NONE)
+            else if (tmp == clickReturn.FLOOR)
             {
                 SpawnObject(startPos, pos - startPos);
                 Debug.Log("Try To Spawn Object");
@@ -143,24 +143,31 @@ public class LocalPlayerControlls : NetworkBehaviour
     {
         SpawnThrowableServerRPC(start, dir);
     }
-
+    
+    [ClientRpc]
+    public void RemoteClickableDisconnectClientRPC(ulong clientID)
+    {
+        if (clientID == OwnerClientId)
+        {
+            lastClikedObject = null;
+            lastClickedItem = clickReturn.NONE;
+        }
+        
+    }
     [ServerRpc]
     private void SpawnThrowableServerRPC(Vector3 start, Vector3 dir)
     {
-        Debug.Log("Try To Spawn Object");
+   //     Debug.Log("Try To Spawn Object");
 
         GameObject go = Instantiate(Throable
-            , start + new Vector3(0, 2, 0), Random.rotation);
+            , new Vector3(start.x,2,start.z) , Quaternion.identity);
         go.GetComponent<NetworkObject>().Spawn();
-        go.GetComponent<PotatoMotion>().Motion = dir;
+        go.GetComponent<ThrowAbleObject>().Motion = dir;
     }
 
     private void AttemptToGrabObject(ulong NetObjID)
     {
-        // if (NetworkManager.Singleton.SpawnManager.SpawnedObjects[NetObjID].IsOwnedByServer)
-        // {
         AttemptToGrabServerRPC(OwnerClientId, NetObjID);
-        //  }
     }
 
     [ServerRpc]

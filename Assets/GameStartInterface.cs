@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,13 +23,19 @@ public class GameStartInterface : MonoBehaviour
     void Start()
     {
         StartAsServer.onClick.AddListener(StartAsServer_); 
-        StartAsClient.onClick.AddListener(StartAsClient_); 
+        StartAsClient.onClick.AddListener(StartAsClient_);
+        NetworkManager.Singleton.OnClientDisconnectCallback += Disonnect;
+    }
+
+    private void  Disonnect(ulong client)
+    {
+     Application.Quit();
     }
 
     void StartAsServer_()
     {
         NetworkManager.Singleton.StartServer();
-        var obj = Instantiate(ServerCameraPrefab,Vector3.zero, Quaternion.Euler(Vector3.down));
+        var obj = Instantiate(ServerCameraPrefab,Vector3.up*35, Quaternion.Euler(90,0,0));
        
         selfDestruct();
     }
@@ -37,16 +44,25 @@ public class GameStartInterface : MonoBehaviour
     {
        
         Debug.Log("Trying to connect to:"+IP_Address.text);
-        NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(IP_Address.text,7777);
+
+        String tartger = "";
+        if (IP_Address.text.Length == 0)
+        {
+            tartger = "127.0.0.1";
+        }
+        else
+        {
+            tartger = IP_Address.text;
+        }
+        NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(tartger,7777);
         
         NetworkManager.Singleton.StartClient();
         selfDestruct();
     }
 
     void selfDestruct()
-    {
-        Destroy(gameObject);
-        
+    { 
+        gameObject.SetActive(false);
     }
 
     // Update is called once per frame
