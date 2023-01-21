@@ -15,6 +15,7 @@ public class GameStartInterface : MonoBehaviour
 
     public Button StartAsServer;
     public Button StartAsClient;
+    public Button StartAsHost;
 
     public TMP_InputField IP_Address;
 
@@ -24,6 +25,7 @@ public class GameStartInterface : MonoBehaviour
     {
         StartAsServer.onClick.AddListener(StartAsServer_); 
         StartAsClient.onClick.AddListener(StartAsClient_);
+        StartAsHost.onClick.AddListener(StartAsHost_);
         NetworkManager.Singleton.OnClientDisconnectCallback += Disonnect;
     }
 
@@ -39,6 +41,13 @@ public class GameStartInterface : MonoBehaviour
        
         selfDestruct();
     }
+    
+      void StartAsHost_()
+        {
+            NetworkManager.Singleton.StartHost();
+         
+            selfDestruct();
+        }
     
     void StartAsClient_()
     {

@@ -17,7 +17,7 @@ public class LocalPlayerControlls : NetworkBehaviour
     {
         DEFAULT,
         FLOOR,
-        POTATO,
+        THROWABLE,
         NONE
     }
 
@@ -87,9 +87,10 @@ public class LocalPlayerControlls : NetworkBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             lastClickedItem = GetHitPoint(out pos, out Transform netObj);
+            Debug.Log(lastClickedItem);
             startPos = pos;
 
-            if (lastClickedItem == clickReturn.POTATO)
+            if (lastClickedItem == clickReturn.THROWABLE)
             {
                 lastClikedObject = netObj.GetComponent<ThrowAbleObject>();
 
@@ -97,7 +98,7 @@ public class LocalPlayerControlls : NetworkBehaviour
                 if (lastClikedObject.IsOwnedByServer)
                 {
                     AttemptToGrabObject(lastClikedObject.NetworkObjectId);
-                    lastClickedItem = clickReturn.POTATO;
+                    lastClickedItem = clickReturn.THROWABLE;
                 }
                 else
                 {
@@ -107,24 +108,29 @@ public class LocalPlayerControlls : NetworkBehaviour
         }
         else if (Input.GetMouseButtonUp(0))
         {
-            Debug.Log("mouseUp");
+           
             var tmp = GetHitPoint(out pos, out Transform netObj);
 
-            if (lastClickedItem == clickReturn.POTATO) // letting go of a potato
+            if (lastClickedItem == clickReturn.THROWABLE) // letting go of a potato
             {
-                lastClikedObject.ResetControllServerRPC();
+                Debug.Log(lastClikedObject);
+                if (lastClikedObject != null)
+                {
+                    lastClikedObject.ResetControllServerRPC();
+                }
+
                 lastClikedObject = null;
                 lastClickedItem = clickReturn.NONE;
             }
-            else if (tmp == clickReturn.FLOOR)
+            else if (tmp == clickReturn.FLOOR && lastClickedItem==clickReturn.FLOOR)
             {
                 SpawnObject(startPos, pos - startPos);
-                Debug.Log("Try To Spawn Object");
+              
             }
         }
 
 
-        if (lastClickedItem == clickReturn.POTATO && lastClikedObject != null &&  lastClikedObject.IsOwner)
+        if (lastClickedItem == clickReturn.THROWABLE && lastClikedObject != null &&  lastClikedObject.IsOwner)
         {
             RaycastHit hit;
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -144,11 +150,12 @@ public class LocalPlayerControlls : NetworkBehaviour
         SpawnThrowableServerRPC(start, dir);
     }
     
-    [ClientRpc]
-    public void RemoteClickableDisconnectClientRPC(ulong clientID)
+    
+    public void RemoteClickableDisconnect(ulong netobj)
     {
-        if (clientID == OwnerClientId)
+        if (lastClikedObject!=null && lastClikedObject.NetworkObjectId == netobj)
         {
+            
             lastClikedObject = null;
             lastClickedItem = clickReturn.NONE;
         }
@@ -157,7 +164,7 @@ public class LocalPlayerControlls : NetworkBehaviour
     [ServerRpc]
     private void SpawnThrowableServerRPC(Vector3 start, Vector3 dir)
     {
-   //     Debug.Log("Try To Spawn Object");
+  
 
         GameObject go = Instantiate(Throable
             , new Vector3(start.x,2,start.z) , Quaternion.identity);
@@ -168,6 +175,7 @@ public class LocalPlayerControlls : NetworkBehaviour
     private void AttemptToGrabObject(ulong NetObjID)
     {
         AttemptToGrabServerRPC(OwnerClientId, NetObjID);
+        
     }
 
     [ServerRpc]
@@ -192,12 +200,10 @@ public class LocalPlayerControlls : NetworkBehaviour
             {
                 return clickReturn.FLOOR;
             }
-
-            if (hit.transform.tag == "potato")
+            if (hit.transform.tag == "throwable")
             {
-                return clickReturn.POTATO;
+                return clickReturn.THROWABLE;
             }
-
             return clickReturn.DEFAULT;
         }
         else

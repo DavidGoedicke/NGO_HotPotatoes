@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -51,12 +52,24 @@ public class ThrowAbleObject : NetworkBehaviour
     IEnumerator DestroyAfter(float time)
     {
         yield return new WaitForSeconds(time);
-        if (!IsOwnedByServer)
-        {
-            NetworkManager.Singleton.ConnectedClients[OwnerClientId].PlayerObject.GetComponent<LocalPlayerControlls>().RemoteClickableDisconnectClientRPC(OwnerClientId);
-        }
-        Destroy(gameObject);
+     
+        NetworkObject.Despawn(true);
+       
     }
+
+    public override void OnNetworkDespawn()
+    {
+        foreach (var localPlayerControlls in FindObjectsOfType<LocalPlayerControlls>())
+        {
+            localPlayerControlls.RemoteClickableDisconnect(NetworkObjectId);
+          
+        }
+        
+        base.OnNetworkDespawn();
+        
+    }
+
+
     /// <summary>
     /// THIS DOES NOT WORK. you need to have ownership somehow 
     /// </summary>
@@ -75,10 +88,14 @@ public class ThrowAbleObject : NetworkBehaviour
         Motion =  new Vector3( vec2.x,0,vec2.y )- transform.position;
      
     }
+
     [ServerRpc]
     public void ResetControllServerRPC()
     {
-        myNetObj.RemoveOwnership();
+    
+            
+            myNetObj.RemoveOwnership();
+        
     }
 
 
@@ -88,9 +105,9 @@ public class ThrowAbleObject : NetworkBehaviour
     {
         if (IsServer) 
         {
-      //      Debug.Log("Got an updated motion vector"+motion.magnitude.ToString());
+    
             transform.position += motion * Time.deltaTime;
-           // transform.Rotate(rot.eulerAngles * Time.deltaTime);
+          
         }
     }
 }
